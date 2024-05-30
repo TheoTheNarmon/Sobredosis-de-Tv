@@ -20,8 +20,8 @@ class Programa(val titulo: String,
 
     fun puedeMantenerse() = condicion.puedeMantenerse(this)
 
-    fun ejecutarAccion(accionPrograma: AccionPrograma){
-        accionPrograma.ejecutar(this)
+    fun ejecutarAccion(grilla: Grilla,accionPrograma: AccionPrograma){
+        accionPrograma.ejecutar(grilla,this)
     }
 }
 

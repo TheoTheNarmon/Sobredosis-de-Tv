@@ -1,13 +1,13 @@
 package ar.edu.unsam.algo2
 
-object grilla {
+class Grilla {
     val programas: MutableList<Programa> = mutableListOf()
     val aRevicion: MutableList<Programa> = mutableListOf()
     val conductores: MutableSet<Conductor> = mutableSetOf()
     val condiciones: MutableList<Condicion> = mutableListOf()
     val acciones: MutableList<AccionPrograma> = mutableListOf()
     var diaRevicion: Dia = Dia.LUNES
-    val observers: List<Observer> = mutableListOf()
+    val observers: MutableList<Observer> = mutableListOf()
 
     fun aRevicion() = aRevicion
     fun programasAlAire() = programas
@@ -27,7 +27,7 @@ object grilla {
     fun agregarPrograma(programa: Programa){
         programas.add(programa)
         programa.conductores().forEach{conductores.add(it)}
-        observers.forEach { it.ejecutar(programa) }
+        observers.forEach { it.ejecutar(this, programa) }
     }
     fun quitarPrograma(programa: Programa){
         if(!programas.contains(programa)){
@@ -45,40 +45,44 @@ object grilla {
         }
         aRevicion.forEach {programa ->
             if(!condiciones.all { it.puedeMantenerse(programa) }){
-                acciones.forEach { it.ejecutar(programa) }
+                acciones.forEach { it.ejecutar(this, programa) }
             }
         }
+    }
+
+    fun agregarObserver(observer: Observer){
+        observers.add(observer)
     }
 }
 
 interface Observer {
-    fun ejecutar(programa: Programa)
+    fun ejecutar(grilla: Grilla, programa: Programa)
 }
 
-class ConductorSender: Observer{
-    override fun ejecutar(programa: Programa){
+class ConductorSender(val mailSender: MailSender): Observer{
+    override fun ejecutar(grilla: Grilla, programa: Programa){
         mailSender.enviarMail(Mail(asunto = "Oportunidad", contenido = "Fuiste elegido para conducir ${programa.titulo}"))
     }
 }
-class ClowinSender: Observer{
-    override fun ejecutar(programa: Programa){
-        smsSender.enviarSms(Sms(mensaje = "$${programa.presupuesto()} - ${programa.titulo} - CONSEGUIR SPONSOR URGENTE!"))
+class ClowinSender(val smsSender: SmsSender): Observer{
+    override fun ejecutar(grilla: Grilla, programa: Programa){
+        smsSender.enviarSms(Sms(mensaje = "$${programa.presupuesto().toString()} - ${programa.titulo} - CONSEGUIR SPONSOR URGENTE!"))
     }
 }
 class EliminadorProgramas: Observer{
-    override fun ejecutar(programa: Programa){
+    override fun ejecutar(grilla: Grilla, programa: Programa){
         grilla.aRevicion().filter{!grilla.programasAlAire().contains(it)}.forEach {
-            grilla.quitarPrograma(it)
+            grilla.aRevicion.remove(it)
         }
     }
 }
 
-object mailSender{
-    fun enviarMail(mail: Mail): String = "¡Te llego un Correo! Asunto = ${mail.asunto}, Contenido = ${mail.contenido}"
+class MailSender{
+    fun enviarMail(mail: Mail){}
 }
 class Mail(val asunto: String, val contenido: String)
 
-object smsSender{
-    fun enviarSms(sms: Sms): String = "Te ha llegado un mensaje = ${sms.mensaje}"
+class SmsSender{
+    fun enviarSms(sms: Sms){}
 }
 class Sms(val mensaje: String)

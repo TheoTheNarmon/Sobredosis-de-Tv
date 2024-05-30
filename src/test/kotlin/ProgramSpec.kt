@@ -3,6 +3,9 @@ package ar.edu.unsam.algo2
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
+import io.mockk.mockk
+import io.mockk.verify
 
 class ProgramSpec: DescribeSpec ({
     isolationMode = IsolationMode.InstancePerTest
@@ -62,12 +65,14 @@ class ProgramSpec: DescribeSpec ({
         titulo = "Union de todos los programas",
         conductores = listOf(pepeArgento, moniArgento, antiPepe, mamaMartha),
         dia = Dia.VIERNES,
-        presupuesto = 100.0,
+        presupuesto = 1000000.0,
         duracion = 15,
         rating = listOf(5.7, 7.8, 3.6, 6.7, 9.0),
         sponsors = listOf(carrefour),
         condicion = CondicionConductores(3)
     )
+
+    val grilla = Grilla()
 
     describe("Programas y condiciones"){
         it("Casados con hijos puede mantenerse"){
@@ -83,51 +88,116 @@ class ProgramSpec: DescribeSpec ({
             programa4.puedeMantenerse() shouldBe false
         }
     }
-    describe("Grilla y acciones"){
-        grilla.agregarPrograma(programa1)
-        grilla.agregarPrograma(programa2)
-        grilla.agregarPrograma(programa3)
-        grilla.agregarPrograma(programa4)
+    describe("Grilla"){
+        it("no tiene nada al principio"){
+            grilla.programasAlAire() shouldBe listOf()
+        }
 
-        it("condiciones de la grilla"){
-            grilla.agregarCondiciones(CondicionRating(5.0))
-            grilla.agregarCondiciones(CondicionConductores(3))
-            grilla.agregarAccion(CambiarDia(Dia.JUEVES))
+        it("agrego un programa y se agrega"){
+            grilla.agregarPrograma(programa1)
+            grilla.programasAlAire() shouldBe listOf(programa1)
+        }
+        it("agrego 2 programas y hay 2 programas"){
+            grilla.agregarPrograma(programa1)
+            grilla.agregarPrograma(programa2)
+
+            grilla.programasAlAire().size shouldBe 2
+        }
+        it("los conductores se agregan"){
+            grilla.agregarPrograma(programa1)
+            grilla.agregarPrograma(programa2)
+
+            grilla.conductores.size shouldBe 3
+        }
+    }
+    describe("revision de la grilla"){
+        it("revicion"){
+            grilla.agregarPrograma(programa1)
+            grilla.agregarPrograma(programa2)
 
             grilla.agregarRevicion(programa1)
             grilla.agregarRevicion(programa2)
-            grilla.agregarRevicion(programa3)
-            grilla.agregarRevicion(programa4)
 
-            grilla.revicion(Dia.LUNES)
+            grilla.agregarCondiciones(CondicionRating(5.7))
+            grilla.agregarAccion(CambiarDia(Dia.JUEVES))
+
+            grilla.cambiarDiaRevicion(Dia.SABADO)
+            grilla.revicion(Dia.SABADO)
 
             programa1.dia shouldBe Dia.DOMINGO
             programa2.dia shouldBe Dia.JUEVES
-            programa3.dia shouldBe Dia.MIERCOLES
-            programa4.dia shouldBe Dia.JUEVES
         }
+    }
 
-        it("agregar programa"){
-            grilla.programas.size shouldBe 4
+    describe("acciones"){
+        it("partir el programa en 2"){
+            grilla.agregarPrograma(programa1)
+            programa1.ejecutarAccion(grilla, PartirPrograma())
+
+            grilla.programasAlAire().contains(programa1) shouldBe false
+            grilla.programasAlAire().size shouldBe 2
         }
+    }
+    describe("reemplazar por simpsons"){
+        it("reemplazar por simpsons"){
+            grilla.agregarPrograma(programa1)
+            programa1.ejecutarAccion(grilla,ReemplazarPorSimpsons())
 
-        it("Fusionar Programa"){
-            programa2.ejecutarAccion(FusionarPrograma())
-
-            grilla.programas.contains(programa2) shouldBe false
-            grilla.programas.contains(programa3) shouldBe false
-            grilla.programas.size shouldBe 3
+            grilla.programasAlAire().contains(programa1) shouldBe false
+            grilla.programasAlAire().size shouldBe 1
         }
-        it("Reemplazar por Simpsons"){
-            programa2.ejecutarAccion(ReemplazarPorSimpsons())
+    }
+    describe("fusionar programas"){
+        it("fusionar programa"){
+            grilla.agregarPrograma(programa1)
+            grilla.agregarPrograma(programa2)
+            programa1.ejecutarAccion(grilla, FusionarPrograma())
 
-            grilla.programas.contains(programa2) shouldBe false
-            grilla.programas.size shouldBe 4
+            grilla.programasAlAire().contains(programa1) shouldBe false
+            grilla.programasAlAire().contains(programa2) shouldBe false
+
+            grilla.programasAlAire().size shouldBe 1
         }
-        it("Partir programa"){
-            programa2.ejecutarAccion(PartirPrograma())
+    }
 
-            grilla.programas.size shouldBe 5
+    describe("Mails"){
+        val mockedEnviaMail = mockk<MailSender>(relaxUnitFun = true)
+        val mockedEnviaSms = mockk<SmsSender>(relaxUnitFun = true)
+
+        grilla.agregarPrograma(programa3)
+        grilla.agregarRevicion(programa3)
+        grilla.quitarPrograma(programa3)
+
+
+        it("eliminar programas que no estan en revision"){
+            grilla.agregarObserver(EliminadorProgramas())
+            grilla.agregarPrograma(programa1)
+
+            grilla.aRevicion().size shouldBe 0
+        }
+        it("se envia mail al conductor"){
+            grilla.agregarObserver(ConductorSender(mockedEnviaMail))
+            grilla.agregarPrograma(programa1)
+
+            verify(exactly = 1){
+                mockedEnviaMail.enviarMail(
+                    Mail(
+                        asunto = "Oportunidad",
+                        contenido = "Fuiste elegido para conducir Casados con hijos"
+                    ))
+            }
+        }
+        it("se envia mail a los accionistas"){
+            grilla.agregarObserver(ClowinSender(mockedEnviaSms))
+            grilla.agregarPrograma(programa4)
+
+            verify(exactly = 1){
+                mockedEnviaSms.enviarSms(
+                    Sms(
+                        mensaje = "$1000000.0 - Union de todos los programas - CONSEGUIR SPONSOR URGENTE!"
+                )
+                )
+            }
         }
     }
 })
