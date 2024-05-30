@@ -1,13 +1,13 @@
 package ar.edu.unsam.algo2
 
 class Programa(val titulo: String,
-    val conductores: List<Conductor>,
-     val sponsors: List<Sponsor>,
-    var dia: Dia,
-    val presupuesto: Double,
-     val duracion: Int,
-    val rating: List<Double>,
-    val condicion: Condicion
+               val conductores: List<Conductor>,
+               val sponsors: List<Sponsor>,
+               var dia: Dia,
+               val presupuesto: Double,
+               val duracion: Int,
+               val rating: List<Double>,
+               val condicion: Condicion
     ){
     fun promedioRating(): Double = rating.sum()/5
     fun conductores(): List<Conductor> = conductores
