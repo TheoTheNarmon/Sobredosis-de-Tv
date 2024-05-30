@@ -9,7 +9,7 @@ class Programa(val titulo: String,
                val rating: List<Double>,
                val condicion: Condicion
     ){
-    fun promedioRating(): Double = rating.sum()/5
+    fun promedioRating(): Double = rating.average()
     fun conductores(): List<Conductor> = conductores
     fun cantConductores(): Int = conductores().size
     fun presupuesto(): Double = presupuesto

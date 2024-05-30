@@ -4,19 +4,15 @@ class Grilla {
     val programas: MutableList<Programa> = mutableListOf()
     val aRevicion: MutableList<Programa> = mutableListOf()
     val conductores: MutableSet<Conductor> = mutableSetOf()
-    val condiciones: MutableList<Condicion> = mutableListOf()
-    val acciones: MutableList<AccionPrograma> = mutableListOf()
+    val condicciones : MutableMap<Condicion,AccionPrograma> = mutableMapOf()
     var diaRevicion: Dia = Dia.LUNES
     val observers: MutableList<Observer> = mutableListOf()
 
     fun aRevicion() = aRevicion
     fun programasAlAire() = programas
 
-    fun agregarCondiciones(condicion: Condicion){
-        condiciones.add(condicion)
-    }
-    fun agregarAccion(accionPrograma: AccionPrograma){
-        acciones.add(accionPrograma)
+    fun agregarCondicciones(condicion: Condicion, accionPrograma: AccionPrograma){
+        condicciones.put(condicion,accionPrograma)
     }
     fun agregarRevicion(programa: Programa){
         if(!programas.contains(programa)){
@@ -44,8 +40,9 @@ class Grilla {
             throw BuisnessException("Hoy no es el dia de la revicion")
         }
         aRevicion.forEach {programa ->
-            if(!condiciones.all { it.puedeMantenerse(programa) }){
-                acciones.forEach { it.ejecutar(this, programa) }
+            condicciones.forEach { cond, act -> if(!cond.puedeMantenerse(programa)){
+                programa.ejecutarAccion(this, act)
+            }
             }
         }
     }

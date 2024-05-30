@@ -17,7 +17,6 @@ class ProgramSpec: DescribeSpec ({
     val garbarino = Sponsor()
     val musimundo = Sponsor()
     val carrefour = Sponsor()
-    val mcDonald = Sponsor()
 
     val programa1 = Programa(
         titulo = "Casados con hijos",
@@ -118,8 +117,7 @@ class ProgramSpec: DescribeSpec ({
             grilla.agregarRevicion(programa1)
             grilla.agregarRevicion(programa2)
 
-            grilla.agregarCondiciones(CondicionRating(5.7))
-            grilla.agregarAccion(CambiarDia(Dia.JUEVES))
+            grilla.agregarCondicciones(CondicionRating(5.7),CambiarDia(Dia.JUEVES))
 
             grilla.cambiarDiaRevicion(Dia.SABADO)
             grilla.revicion(Dia.SABADO)
@@ -164,12 +162,12 @@ class ProgramSpec: DescribeSpec ({
         val mockedEnviaMail = mockk<MailSender>(relaxUnitFun = true)
         val mockedEnviaSms = mockk<SmsSender>(relaxUnitFun = true)
 
-        grilla.agregarPrograma(programa3)
-        grilla.agregarRevicion(programa3)
-        grilla.quitarPrograma(programa3)
-
 
         it("eliminar programas que no estan en revision"){
+            grilla.agregarPrograma(programa3)
+            grilla.agregarRevicion(programa3)
+            grilla.quitarPrograma(programa3)
+
             grilla.agregarObserver(EliminadorProgramas())
             grilla.agregarPrograma(programa1)
 
@@ -183,7 +181,7 @@ class ProgramSpec: DescribeSpec ({
                 mockedEnviaMail.enviarMail(
                     Mail(
                         asunto = "Oportunidad",
-                        contenido = "Fuiste elegido para conducir Casados con hijos"
+                        contenido = "Fuiste elegido para conducir ${programa1.titulo}"
                     ))
             }
         }
