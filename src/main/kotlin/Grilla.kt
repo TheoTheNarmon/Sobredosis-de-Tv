@@ -40,9 +40,9 @@ class Grilla {
             throw BuisnessException("Hoy no es el dia de la revicion")
         }
         aRevicion.forEach {programa ->
-            condicciones.forEach { cond, act -> if(!cond.puedeMantenerse(programa)){
-                programa.ejecutarAccion(this, act)
-            }
+            val primera = condicciones.keys.find{cond -> cond.puedeMantenerse(programa)}
+            if(condicciones[primera] != null){
+                programa.ejecutarAccion(this,condicciones[primera]!!)
             }
         }
     }

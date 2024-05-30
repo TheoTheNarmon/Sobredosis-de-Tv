@@ -118,11 +118,12 @@ class ProgramSpec: DescribeSpec ({
             grilla.agregarRevicion(programa2)
 
             grilla.agregarCondicciones(CondicionRating(5.7),CambiarDia(Dia.JUEVES))
+            grilla.agregarCondicciones(CondicionConducEspecifico(mamaMartha),CambiarDia(Dia.MARTES))
 
             grilla.cambiarDiaRevicion(Dia.SABADO)
             grilla.revicion(Dia.SABADO)
 
-            programa1.dia shouldBe Dia.DOMINGO
+            programa1.dia shouldBe Dia.MARTES
             programa2.dia shouldBe Dia.JUEVES
         }
     }
